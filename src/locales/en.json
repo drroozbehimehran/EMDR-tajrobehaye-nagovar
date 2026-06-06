@@ -1,0 +1,21 @@
+{
+  "app": {
+    "title": "EMDR",
+    "start": "Start",
+    "stop": "Stop",
+    "circles": "Circles",
+    "sound": "Sound",
+    "direction": "Direction",
+    "speed": "Speed",
+    "duration": "Duration",
+    "width": "Width",
+    "backgroundColor": "Background Color",
+    "objectColor": "Object Color",
+    "language": "Language"
+  },
+  "directions": {
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "diagonal": "Diagonal"
+  }
+}
