@@ -1,0 +1,1 @@
+import Vue from 'vue';\nimport VueI18n from 'vue-i18n';\n\nVue.use(VueI18n);\n\nconst messages = {\n  en: require('./locales/en.json'),\n  fa: require('./locales/fa.json'),\n  ar: require('./locales/ar.json')\n};\n\nconst i18n = new VueI18n({\n  locale: localStorage.getItem('language') || 'en',\n  messages\n});\n\nexport default i18n;\n
