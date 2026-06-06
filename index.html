@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <title>EMDR - درمان EMDR - معالجة EMDR</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="EMDR Treatment Application - درمان EMDR - معالجة EMDR">
+    </head>
+    <body>
+        <div id="app" v-bind:style="{ backgroundColor: background, cursor: (isRun ? 'none' : ''), direction: (language === 'fa' || language === 'ar') ? 'rtl' : 'ltr' }">
+            <b-navbar type="dark" variant="dark" fixed="top" v-show="menu">
+                <b-navbar-brand>EMDR</b-navbar-brand>
+                <b-navbar-nav>
+                    <b-form inline>
+                        <b-button :pressed.sync="isRun" v-if="isRun" variant="danger" class="mx-1">{{ language === 'fa' ? 'توقف' : language === 'ar' ? 'توقف' : 'Stop' }} [↵]</b-button>
+                        <b-button :pressed.sync="isRun" v-else variant="success" class="mx-1">{{ language === 'fa' ? 'شروع' : language === 'ar' ? 'ابدأ' : 'Start' }} [↵]</b-button>
+                        <b-form-select v-model="direction" :options="directions" class="mx-1"></b-form-select>
+                        <b-form-spinbutton v-model="speed" min="1" max="240" :formatter-fn="speedFormatter" class="mx-1"></b-form-spinbutton>
+                        <b-form-spinbutton v-model="durationTotal" min="1" max="999" :formatter-fn="durationTotalFormatter" class="mx-1"></b-form-spinbutton>
+                        <b-form-spinbutton v-model="width" min="1" max="100" :formatter-fn="widthFormatter" class="mx-1"></b-form-spinbutton>
+                        <verte v-model="background" model="rgb" class="mx-1"></verte>
+                        <verte v-model="foreground" model="rgb" class="mx-1"></verte>
+                        <b-form-checkbox v-model="circle" size="lg" class="mx-1">{{ language === 'fa' ? 'دایره‌ها' : language === 'ar' ? 'دوائر' : 'Circles' }} [C]</b-form-checkbox>
+                        <b-form-checkbox v-model="sound" size="lg" class="mx-1">{{ language === 'fa' ? 'صدا' : language === 'ar' ? 'صوت' : 'Sound' }} [S]</b-form-checkbox>
+                        <b-form-select v-model="language" @change="changeLanguage" :options="[{value: 'en', text: '🇬🇧 English'}, {value: 'fa', text: '🇮🇷 فارسی'}, {value: 'ar', text: '🇸🇦 العربية'}]" class="mx-1"></b-form-select>
+                    </b-form>
+                </b-navbar-nav>
+                <b-navbar-nav class="ml-auto">
+                    <b-button-close v-on:click="closeFullScreeen"></b-button-close>
+                </b-navbar-nav>
+            </b-navbar>
+            <div id="emdr-squares" v-on:click="toggleRun">
+                <span v-bind:class="[circle ? 'circle' : '', 'emdr-square']" v-for="n in squareNumber" v-bind:style="{ backgroundColor: ( n == squareActive ? foreground : background ), width: widt }"></span>
+            </div>
+        </div>
+        <script src="dist/app.js"></script>
+        <link type="text/css" rel="stylesheet" href="dist/app.css" />
+    </body>
+</html>
