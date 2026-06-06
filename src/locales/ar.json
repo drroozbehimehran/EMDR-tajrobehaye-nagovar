@@ -1,0 +1,21 @@
+{
+  "app": {
+    "title": "EMDR",
+    "start": "ابدأ",
+    "stop": "توقف",
+    "circles": "دوائر",
+    "sound": "صوت",
+    "direction": "الاتجاه",
+    "speed": "السرعة",
+    "duration": "المدة",
+    "width": "العرض",
+    "backgroundColor": "لون الخلفية",
+    "objectColor": "لون الكائن",
+    "language": "اللغة"
+  },
+  "directions": {
+    "horizontal": "أفقي",
+    "vertical": "عمودي",
+    "diagonal": "قطري"
+  }
+}
