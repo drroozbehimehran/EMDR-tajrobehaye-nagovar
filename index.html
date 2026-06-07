@@ -1,39 +1,277 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-    <head>
-        <title>EMDR - درمان EMDR - معالجة EMDR</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="EMDR Treatment Application - درمان EMDR - معالجة EMDR">
-    </head>
-    <body>
-        <div id="app" v-bind:style="{ backgroundColor: background, cursor: (isRun ? 'none' : ''), direction: (language === 'fa' || language === 'ar') ? 'rtl' : 'ltr' }">
-            <b-navbar type="dark" variant="dark" fixed="top" v-show="menu">
-                <b-navbar-brand>EMDR</b-navbar-brand>
-                <b-navbar-nav>
-                    <b-form inline>
-                        <b-button :pressed.sync="isRun" v-if="isRun" variant="danger" class="mx-1">{{ language === 'fa' ? 'توقف' : language === 'ar' ? 'توقف' : 'Stop' }} [↵]</b-button>
-                        <b-button :pressed.sync="isRun" v-else variant="success" class="mx-1">{{ language === 'fa' ? 'شروع' : language === 'ar' ? 'ابدأ' : 'Start' }} [↵]</b-button>
-                        <b-form-select v-model="direction" :options="directions" class="mx-1"></b-form-select>
-                        <b-form-spinbutton v-model="speed" min="1" max="240" :formatter-fn="speedFormatter" class="mx-1"></b-form-spinbutton>
-                        <b-form-spinbutton v-model="durationTotal" min="1" max="999" :formatter-fn="durationTotalFormatter" class="mx-1"></b-form-spinbutton>
-                        <b-form-spinbutton v-model="width" min="1" max="100" :formatter-fn="widthFormatter" class="mx-1"></b-form-spinbutton>
-                        <verte v-model="background" model="rgb" class="mx-1"></verte>
-                        <verte v-model="foreground" model="rgb" class="mx-1"></verte>
-                        <b-form-checkbox v-model="circle" size="lg" class="mx-1">{{ language === 'fa' ? 'دایره‌ها' : language === 'ar' ? 'دوائر' : 'Circles' }} [C]</b-form-checkbox>
-                        <b-form-checkbox v-model="sound" size="lg" class="mx-1">{{ language === 'fa' ? 'صدا' : language === 'ar' ? 'صوت' : 'Sound' }} [S]</b-form-checkbox>
-                        <b-form-select v-model="language" @change="changeLanguage" :options="[{value: 'en', text: '🇬🇧 English'}, {value: 'fa', text: '🇮🇷 فارسی'}, {value: 'ar', text: '🇸🇦 العربية'}]" class="mx-1"></b-form-select>
-                    </b-form>
-                </b-navbar-nav>
-                <b-navbar-nav class="ml-auto">
-                    <b-button-close v-on:click="closeFullScreeen"></b-button-close>
-                </b-navbar-nav>
-            </b-navbar>
-            <div id="emdr-squares" v-on:click="toggleRun">
-                <span v-bind:class="[circle ? 'circle' : '', 'emdr-square']" v-for="n in squareNumber" v-bind:style="{ backgroundColor: ( n == squareActive ? foreground : background ), width: widt }"></span>
+<head>
+    <title>EMDR - درمان EMDR - معالجة EMDR</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="EMDR Treatment Application - درمان EMDR - معالجة EMDR">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.23.1/dist/bootstrap-vue.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            transition: background-color 0.1s;
+        }
+        #emdr-squares {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            flex-wrap: wrap;
+            padding-top: 60px;
+        }
+        .emdr-square {
+            width: 60px;
+            height: 60px;
+            background-color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.1s, transform 0.1s;
+        }
+        .emdr-square.circle {
+            border-radius: 50%;
+        }
+        .emdr-square:hover {
+            transform: scale(1.1);
+        }
+        .navbar {
+            z-index: 1000;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .control-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            color: white;
+        }
+        button {
+            min-width: 80px;
+        }
+        input[type="range"] {
+            width: 100px;
+        }
+        label {
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        select, input {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-dark fixed-top" v-show="menu">
+            <span class="navbar-brand mb-0 h1">EMDR</span>
+            <div class="controls">
+                <!-- Start/Stop Button -->
+                <button class="btn" :class="isRun ? 'btn-danger' : 'btn-success'" @click="toggleRun">
+                    <span v-if="isRun">{{ language === 'fa' ? 'توقف' : language === 'ar' ? 'توقف' : 'Stop' }} [↵]</span>
+                    <span v-else>{{ language === 'fa' ? 'شروع' : language === 'ar' ? 'ابدأ' : 'Start' }} [↵]</span>
+                </button>
+
+                <!-- Direction Select -->
+                <select v-model="direction" class="form-control" style="width: auto;">
+                    <option value="left-right">← →</option>
+                    <option value="up-down">↑ ↓</option>
+                    <option value="diagonal">↗ ↙</option>
+                </select>
+
+                <!-- Speed Control -->
+                <div class="control-group">
+                    <label>{{ language === 'fa' ? 'سرعت' : language === 'ar' ? 'السرعة' : 'Speed' }}</label>
+                    <input type="range" v-model.number="speed" min="1" max="240" style="width: 80px;">
+                    <span>{{ speed }}</span>
+                </div>
+
+                <!-- Duration Control -->
+                <div class="control-group">
+                    <label>{{ language === 'fa' ? 'مدت' : language === 'ar' ? 'المدة' : 'Duration' }}</label>
+                    <input type="range" v-model.number="durationTotal" min="1" max="999" style="width: 80px;">
+                    <span>{{ durationTotal }}s</span>
+                </div>
+
+                <!-- Size Control -->
+                <div class="control-group">
+                    <label>{{ language === 'fa' ? 'اندازه' : language === 'ar' ? 'الحجم' : 'Size' }}</label>
+                    <input type="range" v-model.number="width" min="20" max="100" style="width: 80px;">
+                    <span>{{ width }}px</span>
+                </div>
+
+                <!-- Circle Checkbox -->
+                <label>
+                    <input type="checkbox" v-model="circle">
+                    {{ language === 'fa' ? 'دایره‌ها' : language === 'ar' ? 'دوائر' : 'Circles' }} [C]
+                </label>
+
+                <!-- Sound Checkbox -->
+                <label>
+                    <input type="checkbox" v-model="sound">
+                    {{ language === 'fa' ? 'صدا' : language === 'ar' ? 'صوت' : 'Sound' }} [S]
+                </label>
+
+                <!-- Language Select -->
+                <select v-model="language" class="form-control" style="width: auto;">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="fa">🇮🇷 فارسی</option>
+                    <option value="ar">🇸🇦 العربية</option>
+                </select>
+
+                <!-- Close Button -->
+                <button class="btn btn-outline-light" @click="closeFullScreen">✕</button>
             </div>
+        </nav>
+
+        <!-- EMDR Squares -->
+        <div id="emdr-squares" @click="toggleRun">
+            <span 
+                v-for="n in squareNumber" 
+                :key="n"
+                :class="['emdr-square', { circle: circle }]" 
+                :style="{ 
+                    backgroundColor: (n === squareActive ? foreground : background), 
+                    width: width + 'px',
+                    height: width + 'px'
+                }">
+            </span>
         </div>
-        <script src="dist/app.js"></script>
-        <link type="text/css" rel="stylesheet" href="dist/app.css" />
-    </body>
+    </div>
+
+    <!-- Vue & Dependencies from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.23.1/dist/bootstrap-vue.js"></script>
+    
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    isRun: false,
+                    menu: true,
+                    direction: 'left-right',
+                    speed: 60,
+                    durationTotal: 60,
+                    width: 60,
+                    circle: false,
+                    sound: false,
+                    language: localStorage.getItem('language') || 'en',
+                    background: 'rgb(0, 0, 0)',
+                    foreground: 'rgb(255, 255, 255)',
+                    squareNumber: 4,
+                    squareActive: 0,
+                    audioContext: null,
+                    startTime: 0,
+                    animationId: null
+                };
+            },
+            watch: {
+                language(newVal) {
+                    localStorage.setItem('language', newVal);
+                }
+            },
+            mounted() {
+                window.addEventListener('keypress', this.handleKeyPress);
+                this.initAudio();
+                this.startAnimation();
+            },
+            beforeDestroy() {
+                window.removeEventListener('keypress', this.handleKeyPress);
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            },
+            methods: {
+                toggleRun() {
+                    this.isRun = !this.isRun;
+                    if (this.isRun) {
+                        this.startTime = Date.now();
+                    }
+                },
+                closeFullScreen() {
+                    this.menu = !this.menu;
+                },
+                handleKeyPress(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.toggleRun();
+                    } else if (e.key.toLowerCase() === 'c') {
+                        e.preventDefault();
+                        this.circle = !this.circle;
+                    } else if (e.key.toLowerCase() === 's') {
+                        e.preventDefault();
+                        this.sound = !this.sound;
+                    }
+                },
+                initAudio() {
+                    try {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        this.audioContext = new AudioContext();
+                    } catch (e) {
+                        console.log('Web Audio API not supported');
+                    }
+                },
+                playSound() {
+                    if (!this.sound || !this.audioContext) return;
+                    try {
+                        const now = this.audioContext.currentTime;
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        
+                        osc.connect(gain);
+                        gain.connect(this.audioContext.destination);
+                        
+                        osc.frequency.value = 400;
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                        
+                        osc.start(now);
+                        osc.stop(now + 0.1);
+                    } catch (e) {
+                        console.log('Sound error:', e);
+                    }
+                },
+                startAnimation() {
+                    const animate = () => {
+                        if (this.isRun) {
+                            const elapsed = (Date.now() - this.startTime) / 1000;
+                            
+                            if (elapsed > this.durationTotal) {
+                                this.isRun = false;
+                                this.squareActive = 0;
+                            } else {
+                                const position = (elapsed * this.speed) % (this.squareNumber - 1);
+                                this.squareActive = Math.round(position);
+                                this.playSound();
+                            }
+                        }
+                        this.animationId = requestAnimationFrame(animate);
+                    };
+                    animate();
+                }
+            }
+        });
+    </script>
+</body>
 </html>
